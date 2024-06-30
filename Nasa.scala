@@ -26,12 +26,20 @@ object ClientServer extends ZIOAppDefault {
 
   case class ApodResponse(date: String, explanation: String, url: String, media_type: String, title: String) derives Schema
 
-
   val getUserPosts =
-  // Endpoint(Method.GET / "planetary" / int("userId") / "posts" / int("postId"))
     Endpoint(Method.GET / "planetary" / "apod")
       .query(query("api_key"))
       .out[ApodResponse] @@ auth
+
+  val rawUrl = "https://api.nasa.gov/planetary/earth/imagery?lon=-95.33&lat=29.78&date=2018-01-01&dim=0.15&api_key=DEMO_KEY"
+  val getEarthImagery =
+    Endpoint(Method.GET / "planetary" / "earth" / "imagery")
+      .query(float("lon"))
+      .query(query("lat")) 
+      .query(query("date"))
+      .query(query("dim"))
+      .query(query("api_key"))
+      .out[String] @@ auth
 
   def example(client: Client, nasa_api_key: String) = {
       val locator =
@@ -42,9 +50,26 @@ object ClientServer extends ZIOAppDefault {
 
       val x2 = getUserPosts(nasa_api_key)
 
-      val result2: ZIO[Scope, Nothing, ApodResponse] = executor(x2)
+      val apodResult: ZIO[Scope, Nothing, ApodResponse] = executor(x2)
 
-      result2.debug
+      val request = 
+        getEarthImagery(
+          "-95.33",
+          "29.78",
+          "2018-01-01",
+          "0.15",
+          nasa_api_key
+        )
+
+      val getEarthResult: ZIO[Scope, Nothing, String] = executor(
+        request
+      )
+
+      defer:
+        apodResult.debug.run
+        getEarthResult.debug.run
+
+
     }
 
   val program =
