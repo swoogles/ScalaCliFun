@@ -34,7 +34,7 @@ object ClientServer extends ZIOAppDefault {
   val rawUrl = "https://api.nasa.gov/planetary/earth/imagery?lon=-95.33&lat=29.78&date=2018-01-01&dim=0.15&api_key=DEMO_KEY"
   val getEarthImagery =
     Endpoint(Method.GET / "planetary" / "earth" / "imagery")
-      .query(float("lon"))
+      .query(query("lon"))
       .query(query("lat")) 
       .query(query("date"))
       .query(query("dim"))
